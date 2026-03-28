@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Katraj Medical Shops Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans', sans-serif; background: #0f1923; }
+
+  /* ── HEADER ── */
+  #header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 1100;
+    background: linear-gradient(135deg, #0d3b66 0%, #1a5276 60%, #0d3b66 100%);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.5);
+    border-bottom: 3px solid #f39c12;
+  }
+  #header .icon {
+    font-size: 28px;
+    filter: drop-shadow(0 0 6px #f39c12);
+  }
+  #header h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: #ffffff;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  #header .subtitle {
+    font-size: 12px;
+    color: #aed6f1;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+  #header .badge {
+    margin-left: auto;
+    background: #f39c12;
+    color: #0d3b66;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── MAP ── */
+  #map {
+    height: 100vh;
+    width: 100%;
+    padding-top: 60px;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    background: rgba(13, 27, 42, 0.93);
+    border: 1.5px solid #2e86c1;
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #ecf0f1;
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 12px;
+    min-width: 170px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+  }
+  .legend h4 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #f39c12;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 9px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #2e86c1;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+  }
+  .dot-pharmacy     { background: #2980b9; }
+  .dot-chain        { background: #8e44ad; }
+  .dot-24hr         { background: #e74c3c; }
+  .dot-ayurvedic    { background: #27ae60; }
+  .legend-count {
+    margin-top: 10px;
+    padding-top: 7px;
+    border-top: 1px solid #2e86c1;
+    color: #aed6f1;
+    font-size: 11px;
+  }
+  .legend-count span { color: #f39c12; font-weight: 700; }
+
+  /* ── NORTH ARROW ── */
+  .north-arrow-control {
+    background: rgba(13, 27, 42, 0.93);
+    border: 1.5px solid #2e86c1;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    width: 58px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+  }
+  .north-arrow-control svg {
+    display: block;
+    margin: 0 auto 4px;
+  }
+  .north-arrow-control .n-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #f39c12;
+    letter-spacing: 1px;
+  }
+
+  /* ── POPUP CUSTOM ── */
+  .leaflet-popup-content-wrapper {
+    background: rgba(13, 27, 42, 0.96) !important;
+    border: 1.5px solid #2e86c1 !important;
+    border-radius: 10px !important;
+    color: #ecf0f1 !important;
+    font-family: 'Noto Sans', sans-serif !important;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6) !important;
+  }
+  .leaflet-popup-tip { background: #2e86c1 !important; }
+  .leaflet-popup-content { font-size: 12.5px; line-height: 1.7; }
+  .leaflet-popup-content b {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f39c12;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .popup-row { display: flex; gap: 6px; align-items: center; }
+  .popup-badge {
+    display: inline-block;
+    background: #1a5276;
+    color: #aed6f1;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  .popup-badge.open24 { background: #7b241c; color: #f1948a; }
+  .popup-badge.chain  { background: #512e8a; color: #d2b4de; }
+  .popup-badge.ayur   { background: #1d6a39; color: #a9dfbf; }
+
+  /* ── SCALE BAR OVERRIDE ── */
+  .leaflet-control-scale-line {
+    background: rgba(13,27,42,0.85) !important;
+    border: 1.5px solid #2e86c1 !important;
+    border-top: none !important;
+    color: #aed6f1 !important;
+    font-family: 'Noto Sans', sans-serif !important;
+    font-size: 11px !important;
+    padding: 2px 6px !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="icon">🏥</div>
+  <div>
+    <h2>Katraj Medical Shops Dashboard</h2>
+    <div class="subtitle">Pune, Maharashtra &nbsp;|&nbsp; Interactive Map</div>
+  </div>
+  <div class="badge">10 Locations</div>
+</div>
+
+<div id="map"></div>
+
+<script>
+// ── Category colour map ──
+const categoryColor = {
+  'Pharmacy':            '#2980b9',
+  'Pharmacy Chain':      '#8e44ad',
+  '24Hr Chemist':        '#e74c3c',
+  'Ayurvedic Pharmacy':  '#27ae60',
+};
+
+function coloredIcon(color) {
+  return L.divIcon({
+    className: '',
+    html: `<svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 0C6.268 0 0 6.268 0 14c0 9.334 14 22 14 22S28 23.334 28 14C28 6.268 21.732 0 14 0z"
+        fill="${color}" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"/>
+      <circle cx="14" cy="14" r="6" fill="white" opacity="0.9"/>
+      <text x="14" y="18.5" text-anchor="middle" font-size="10" font-weight="bold" fill="${color}">+</text>
+    </svg>`,
+    iconSize: [28, 36],
+    iconAnchor: [14, 36],
+    popupAnchor: [0, -36]
+  });
+}
+
+function badgeClass(cat) {
+  if (cat === '24Hr Chemist')        return 'open24';
+  if (cat === 'Pharmacy Chain')      return 'chain';
+  if (cat === 'Ayurvedic Pharmacy')  return 'ayur';
+  return '';
+}
+
+// ── Map init ──
+var map = L.map('map', { zoomControl: false }).setView([18.4575, 73.8567], 14);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap © CARTO'
+}).addTo(map);
+
+// Zoom control top-right
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+// ── Scale bar ──
+L.control.scale({ position: 'bottomright', imperial: false, maxWidth: 150 }).addTo(map);
+
+// ── Shops data ──
+const shops = [
+  { lat:18.447947,  lng:73.868606,  name:'Sanjeevani Medical Store',         phone:'8459581485',  hours:'09:00–23:00',  cat:'Pharmacy',           addr:'Katraj Kondhwa Road, Pune' },
+  { lat:18.4608236, lng:73.8690198, name:'Metro Medical',                    phone:'8425962420',  hours:'09:00–18:00',  cat:'Pharmacy',           addr:'Rajiv Gandhi Nagar, Bibwewadi, Pune' },
+  { lat:18.45521,   lng:73.86754,   name:'MedPlus Tiranga Chowk',            phone:'4067006700',  hours:'07:00–23:00',  cat:'Pharmacy Chain',     addr:'Bharti Vidyapeeth, Katraj, Pune' },
+  { lat:18.4462,    lng:73.8702,    name:'Sai Sneha Medical Stores',         phone:'9604397797',  hours:'09:00–23:59',  cat:'Pharmacy',           addr:'Katraj Vasahat, Pune' },
+  { lat:18.44863,   lng:73.87321,   name:'Bharat Medical & General Store',   phone:'9022001122',  hours:'24 Hours',     cat:'24Hr Chemist',       addr:'Dattanagar Road, Katraj, Pune' },
+  { lat:18.45041,   lng:73.87132,   name:'Trishakti Medical & General Stores',phone:'9850014521', hours:'10:00–23:30',  cat:'Pharmacy',           addr:'Santosh Nagar, Katraj, Pune' },
+  { lat:18.45492,   lng:73.86793,   name:'Darshan Medical & General Stores', phone:'206925052',   hours:'09:00–22:00',  cat:'Pharmacy',           addr:'Bharti Vihar, Katraj, Pune' },
+  { lat:18.4534,    lng:73.8699,    name:'Suyash Medical & General Stores',  phone:'2024377673',  hours:'09:00–22:00',  cat:'Pharmacy',           addr:'Katraj, Pune' },
+  { lat:18.4522,    lng:73.8682,    name:'Prasad Medical & General Stores',  phone:'9665095383',  hours:'09:00–22:00',  cat:'Pharmacy',           addr:'Katraj Jakat Naka, Pune' },
+  { lat:18.4513,    lng:73.8706,    name:'Patanjali Chikitsalay',            phone:'7798981277',  hours:'09:00–21:00',  cat:'Ayurvedic Pharmacy', addr:'Kapil Upwan Plaza, Katraj, Pune' },
+];
+
+shops.forEach(s => {
+  const color = categoryColor[s.cat] || '#2980b9';
+  const bc = badgeClass(s.cat);
+  L.marker([s.lat, s.lng], { icon: coloredIcon(color) })
+    .addTo(map)
+    .bindPopup(`
+      <b>${s.name}</b>
+      <div class="popup-row">📞 ${s.phone}</div>
+      <div class="popup-row">🕐 ${s.hours}</div>
+      <div class="popup-row">📍 ${s.addr}</div>
+      <span class="popup-badge ${bc}">${s.cat}</span>
+    `);
+});
+
+// ── LEGEND control ──
+const Legend = L.Control.extend({
+  options: { position: 'bottomleft' },
+  onAdd: function() {
+    const div = L.DomUtil.create('div', 'legend');
+    div.innerHTML = `
+      <h4>🗺 Legend</h4>
+      <div class="legend-item"><div class="legend-dot dot-pharmacy"></div> Pharmacy</div>
+      <div class="legend-item"><div class="legend-dot dot-chain"></div> Pharmacy Chain</div>
+      <div class="legend-item"><div class="legend-dot dot-24hr"></div> 24Hr Chemist</div>
+      <div class="legend-item"><div class="legend-dot dot-ayurvedic"></div> Ayurvedic Pharmacy</div>
+      <div class="legend-count">Total: <span>10</span> medical shops</div>
+    `;
+    L.DomEvent.disableClickPropagation(div);
+    return div;
+  }
+});
+new Legend().addTo(map);
+
+// ── NORTH ARROW control ──
+const NorthArrow = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd: function() {
+    const div = L.DomUtil.create('div', 'north-arrow-control');
+    div.innerHTML = `
+      <svg width="32" height="42" viewBox="0 0 32 42" xmlns="http://www.w3.org/2000/svg">
+        <!-- North (top) half – orange -->
+        <polygon points="16,2 24,22 16,18" fill="#f39c12"/>
+        <polygon points="16,2 8,22 16,18"  fill="#e67e22"/>
+        <!-- South (bottom) half – grey -->
+        <polygon points="16,38 24,22 16,26" fill="#5d6d7e"/>
+        <polygon points="16,38 8,22 16,26"  fill="#7f8c8d"/>
+        <!-- Centre circle -->
+        <circle cx="16" cy="22" r="3.5" fill="white" stroke="#2e86c1" stroke-width="1"/>
+      </svg>
+      <div class="n-label">N</div>
+    `;
+    L.DomEvent.disableClickPropagation(div);
+    return div;
+  }
+});
+new NorthArrow().addTo(map);
+</script>
+</body>
+</html>
